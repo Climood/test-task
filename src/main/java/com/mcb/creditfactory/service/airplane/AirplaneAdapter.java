@@ -1,6 +1,6 @@
-package com.mcb.creditfactory.service.car;
+package com.mcb.creditfactory.service.airplane;
 
-import com.mcb.creditfactory.dto.CarDto;
+import com.mcb.creditfactory.dto.AirplaneDto;
 import com.mcb.creditfactory.dto.Collateral;
 import com.mcb.creditfactory.external.CollateralObject;
 import com.mcb.creditfactory.external.CollateralType;
@@ -17,30 +17,42 @@ import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class CarAdapter implements CollateralObject {
+public class AirplaneAdapter implements CollateralObject {
     @Autowired
     private CostEvaluationRepository costEvaluationRepository;
     @Autowired
-    private CarService carService;
+    private AirplaneService airplaneService;
 
     private static final LocalDate MIN_ASSESS_DATE = LocalDate.of(2017, Month.OCTOBER, 1);
-    private static final int MIN_CAR_YEAR = 2000;
-    private static final BigDecimal MIN_CAR_VALUE = BigDecimal.valueOf(1000000);
+    private static final int MIN_PLANE_YEAR = 1991;
+    private static final BigDecimal MIN_PLANE_VALUE = BigDecimal.valueOf(230000000);
 
-    private CarDto carDto;
+    private AirplaneDto airplaneDto;
 
-    public CarAdapter(CarDto carDto){
-        this.carDto = carDto;
+    public AirplaneAdapter(AirplaneDto airplaneDto) {
+        this.airplaneDto = airplaneDto;
     }
 
     // Используется когда адаптер создается через new вне контекста Spring
-    public void setCarService(CarService carService){
-        this.carService = carService;
+    public void setAirplaneService(AirplaneService airplaneService){
+        this.airplaneService = airplaneService;
+    }
+
+    public String getManufacturer() {
+        return airplaneDto.getManufacturer();
+    }
+
+    public Integer getFuelCapacity() {
+        return airplaneDto.getFuelCapacity();
+    }
+
+    public Integer getSeats() {
+        return airplaneDto.getSeats();
     }
 
     @Override
     public BigDecimal getValue() {
-        CostEvaluation costEvaluation = costEvaluationRepository.findByEvaluationObjectId(carDto.getId()).get(0);
+        CostEvaluation costEvaluation = costEvaluationRepository.findByEvaluationObjectId(airplaneDto.getId()).get(0);
         if(costEvaluation != null && costEvaluation.getValue() != null){
             return costEvaluation.getValue();
         }
@@ -49,12 +61,12 @@ public class CarAdapter implements CollateralObject {
 
     @Override
     public Short getYear() {
-        return carDto.getYear();
+        return airplaneDto.getYear();
     }
 
     @Override
     public LocalDate getDate() {
-        List<CostEvaluation> costEvaluationList = costEvaluationRepository.findByEvaluationObjectId(carDto.getId());
+        List<CostEvaluation> costEvaluationList = costEvaluationRepository.findByEvaluationObjectId(airplaneDto.getId());
         costEvaluationList.sort((c1,c2) -> c1.compareTo(c2));
         CostEvaluation costEvaluation = costEvaluationList.get(costEvaluationList.size() -1 ); // После сортировки самый новый будет в конце
         if(costEvaluation != null && costEvaluation.getDate() != null){
@@ -67,19 +79,19 @@ public class CarAdapter implements CollateralObject {
 
     @Override
     public CollateralType getType() {
-        return CollateralType.CAR;
+        return CollateralType.AIRPLANE;
     }
 
     @Override
     public int approve(CollateralObject object) {
-        if (object.getYear() < MIN_CAR_YEAR) {
-            return -10;
+        if (object.getYear() < MIN_PLANE_YEAR) {
+            return -20;
         }
         if (object.getDate().isBefore(MIN_ASSESS_DATE)) {
-            return -11;
+            return -21;
         }
-        if (object.getValue().compareTo(MIN_CAR_VALUE) < 0) {
-            return -12;
+        if (object.getValue().compareTo(MIN_PLANE_VALUE) < 0) {
+            return -22;
         }
 
         return 0;
@@ -87,34 +99,35 @@ public class CarAdapter implements CollateralObject {
 
     @Autowired
     public Long saveCollateral(Collateral object) {
-        if (!(object instanceof CarDto)) {
+        if (!(object instanceof AirplaneDto)) {
             throw new IllegalArgumentException();
         }
 
-        CarDto car = (CarDto) object;
-        boolean approved = carService.approve(car);
+        AirplaneDto airplaneDto = (AirplaneDto) object;
+        boolean approved = airplaneService.approve(airplaneDto);
         if (!approved) {
             return null;
         }
 
-        return Optional.of(car)
-                .map(carService::fromDto)
-                .map(carService::save)
-                .map(carService::getId)
+        return Optional.of(airplaneDto)
+                .map(airplaneService::fromDto)
+                .map(airplaneService::save)
+                .map(airplaneService::getId)
                 .orElse(null);
     }
 
     @Autowired
     public Collateral getInfo(Collateral object) {
-        if (!(object instanceof CarDto)) {
+        if (!(object instanceof AirplaneDto)) {
             throw new IllegalArgumentException();
         }
 
-        return Optional.of((CarDto) object)
-                .map(carService::fromDto)
-                .map(carService::getId)
-                .flatMap(carService::load)
-                .map(carService::toDTO)
+        return Optional.of((AirplaneDto) object)
+                .map(airplaneService::fromDto)
+                .map(airplaneService::getId)
+                .flatMap(airplaneService::load)
+                .map(airplaneService::toDTO)
                 .orElse(null);
     }
+
 }

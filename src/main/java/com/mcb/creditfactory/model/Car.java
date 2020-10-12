@@ -5,24 +5,42 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "CAR")
-public class Car {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String brand;
-    private String model;
+public class Car extends BaseEntity{
+
+    @Column(name = "power")
     private Double power;
 
     @Column(name = "year_of_issue")
     private Short year;
 
-    @Column(name = "assessed_value")
-    private BigDecimal value;
+    public Double getPower() {
+        return power;
+    }
+
+    public void setPower(Double power) {
+        this.power = power;
+    }
+
+    public Short getYear() {
+        return year;
+    }
+
+    public void setYear(Short year) {
+        this.year = year;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Car{" +
+                "power=" + power +
+                ", year=" + year +
+                '}';
+    }
 }
